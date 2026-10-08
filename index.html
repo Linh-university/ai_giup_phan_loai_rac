@@ -12,7 +12,7 @@
 <!--
   Bé phân loại rác cùng trí tuệ nhân tạo
   - Chế độ "Bé dạy máy": bé đưa rác vào khung trên camera, giữ nút màu của thùng rác -> máy học.
-  - Chế độ "Chơi": máy nhận ra rác và chỉ đúng thùng.
+  - Chế độ "Bắt đầu": máy nhận ra rác và chỉ đúng thùng.
   AI: mạng nơ-ron MobileNet trích đặc trưng ảnh + bộ phân loại KNN học ngay trên điện thoại.
   Máy chỉ nhìn phần ảnh TRONG KHUNG giữa camera (cả lúc dạy và lúc chơi).
   Dữ liệu bé dạy được lưu trong điện thoại (IndexedDB), không gửi đi đâu.
@@ -21,6 +21,8 @@
     tai-che, huu-co, con-lai : giọng bé đọc hướng dẫn cho từng thùng
     chao                     : lời chào khi mở app (không bắt buộc)
   Thiếu tệp nào thì máy dùng giọng đọc tiếng Việt của điện thoại.
+  Thư mục am-thanh/ có sẵn 4 tệp MẪU .mp3 (giọng máy). Thay bằng giọng bé: ghi đè tệp .mp3 cùng tên,
+  hoặc chỉ cần thêm tệp .m4a/.wav cùng tên — tệp ghi âm luôn được ưu tiên hơn tệp mẫu.
 -->
 <style>
   :root { --bg:#f1f9fc; --text:#0c2a3e; --xanh:#55B3D9; --line:#bfe2f0; }
@@ -30,27 +32,26 @@
          background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center;
          padding:max(8px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom)); user-select:none; -webkit-user-select:none; }
   header { display:flex; justify-content:space-between; align-items:center; width:100%; max-width:520px; gap:8px; }
-  h1 { margin:0; font-size:clamp(17px,4.8vw,26px); display:flex; align-items:center; gap:8px; min-width:0; }
+  h1 { margin:0; font-size:clamp(17px,5vw,28px); display:flex; align-items:center; gap:8px; min-width:0; }
+  h1 .ten { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #anhBeNho { width:38px; height:38px; border-radius:50%; object-fit:cover; border:3px solid var(--xanh); flex:none; }
-  .phai { display:flex; align-items:center; gap:6px; flex:none; }
-  #diem { font-size:20px; font-weight:800; white-space:nowrap; }
-  #baMe { width:44px; height:44px; border-radius:50%; border:2px solid var(--line); background:#fff; font-size:20px; }
-  #tab { display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%; max-width:520px; margin-top:8px;
+  #diem { font-size:22px; font-weight:800; white-space:nowrap; flex:none; }
+  #tab { display:grid; grid-template-columns:1fr 1fr auto; gap:6px; width:100%; max-width:520px; margin-top:8px;
          background:#e3f3fa; padding:4px; border-radius:999px; }
-  #tab button { border:0; border-radius:999px; padding:10px; font-size:clamp(15px,4.2vw,18px); font-weight:800;
+  #tab button { border:0; border-radius:999px; padding:10px 6px; font-size:clamp(14px,4vw,18px); font-weight:800; white-space:nowrap;
                 background:transparent; color:var(--text); }
   #tab button.chon { background:var(--xanh); box-shadow:0 1px 4px rgba(0,0,0,.12); }
+  #tab #baMe { background:#fff; border:2px solid var(--line); padding:8px 12px; white-space:nowrap; }
 
   /* Camera + khung đặt rác */
-  #khung { position:relative; width:min(92vw,42vh,420px); aspect-ratio:1; margin-top:8px; flex:none;
+  #khung { position:relative; width:min(92vw,40vh,400px); aspect-ratio:1; margin-top:10px; flex:none;
            border-radius:22px; overflow:hidden; background:#d5ecf6; border:4px solid var(--xanh); box-shadow:0 6px 18px rgba(0,0,0,.12); }
-  body[data-che-do="day"] #khung { width:min(94vw,52vh,480px); }
   #khung video { width:100%; height:100%; object-fit:cover; display:block; }
   #khung video.guong { transform:scaleX(-1); }
   #dich { position:absolute; left:15%; top:15%; width:70%; height:70%; border:4px dashed rgba(255,255,255,.95);
           border-radius:20px; box-shadow:0 0 0 999px rgba(12,42,62,.28); pointer-events:none; transition:border-color .15s; }
   #nhanDich { position:absolute; left:0; right:0; bottom:-34px; text-align:center; color:#fff; font-weight:800;
-              font-size:clamp(13px,3.8vw,16px); text-shadow:0 1px 3px rgba(0,0,0,.7); }
+              font-size:clamp(12px,3.6vw,16px); white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.7); }
   #demChup { position:absolute; top:10px; left:10px; background:rgba(12,42,62,.75); color:#fff; border-radius:999px;
              padding:5px 12px; font-weight:800; font-size:16px; display:none; }
   #nhay { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .12s; }
@@ -66,14 +67,14 @@
   .thung.sang { opacity:1; transform:scale(1.1); }
 
   /* Nút dạy máy: giữ để chụp */
-  .nutDay { position:relative; border:0; border-radius:16px; padding:8px; min-height:60px; color:#fff; font-weight:800;
-            font-size:clamp(15px,4.2vw,18px); display:flex; align-items:center; gap:8px; text-align:left;
+  .nutDay { position:relative; border:0; border-radius:18px; padding:10px 8px; color:#fff; font-weight:800;
+            font-size:clamp(15px,4.3vw,19px); display:flex; align-items:center; gap:8px; text-align:left;
             touch-action:none; box-shadow:0 4px 0 rgba(0,0,0,.18); transition:transform .1s; }
-  .nutDay img { width:38px; height:38px; object-fit:contain; flex:none; }
-  .nutDay .so { display:block; font-size:clamp(12px,3.4vw,14px); font-weight:700; opacity:.95; }
+  .nutDay img { width:48px; height:48px; object-fit:contain; flex:none; }
+  .nutDay .so { display:block; font-size:clamp(13px,3.6vw,15px); font-weight:700; opacity:.95; }
   .nutDay.giu { transform:translateY(3px) scale(.97); box-shadow:0 1px 0 rgba(0,0,0,.18); outline:4px solid #fff; }
-  .nutDay.du::after { content:"✓"; position:absolute; top:4px; right:10px; font-size:18px; }
-  #goiY { font-size:13px; opacity:.75; text-align:center; margin:8px 0 0; max-width:520px; }
+  .nutDay.du::after { content:"✓"; position:absolute; top:6px; right:10px; font-size:20px; }
+  #goiY { font-size:14px; opacity:.75; text-align:center; margin:8px 0 0; max-width:520px; }
   .an { display:none !important; }
 
   /* Bảng dành cho ba mẹ */
@@ -108,10 +109,10 @@
 </head>
 <body data-che-do="day">
   <header>
-    <h1><img id="anhBeNho" src="anh/be.jpg" alt="" onerror="this.remove()">♻️ Bé Phân Loại Rác</h1>
-    <div class="phai"><div id="diem">⭐ 0</div><button id="baMe" aria-label="Dành cho ba mẹ">⚙️</button></div>
+    <h1><img id="anhBeNho" src="anh/be.jpg" alt="" onerror="this.remove()"><span class="ten">♻️ Bé Phân Loại Rác</span></h1>
+    <div id="diem">⭐ 0</div>
   </header>
-  <div id="tab"><button id="tabDay">🎓 Bé dạy máy</button><button id="tabChoi">🎮 Chơi</button></div>
+  <div id="tab"><button id="tabDay">🎓 Dạy máy</button><button id="tabChoi">Bắt đầu</button><button id="baMe" aria-label="Dành cho ba mẹ">⚙️ Ba mẹ</button></div>
   <div id="khung">
     <video id="video" playsinline muted autoplay></video>
     <div id="dich"><div id="nhanDich">Đưa rác vào khung này</div></div>
@@ -174,7 +175,7 @@ const LOP_NEN = "Khong co gi";
 const TEN_BE = "Cát Uy";                 // ảnh bé đặt ở anh/be.jpg (không có thì tự ẩn)
 const AM_CHAO = "am-thanh/chao";         // lời chào khi mở app (không bắt buộc)
 const BAI_HOC_MAU = "bai-hoc-mau.json";  // bài học mẫu đi kèm app
-const DUOI_AM = ["mp3", "m4a", "wav"];
+const DUOI_AM = ["m4a", "wav", "mp3"];   // ưu tiên tệp ghi âm (.m4a/.wav) hơn tệp mẫu .mp3
 const TOI_THIEU = 30;          // số hình tối thiểu mỗi nút
 const NHIP_CHUP_MS = 150;      // giữ nút: chụp ~6 hình/giây
 const K = 10;                  // số "hàng xóm" KNN xem xét
@@ -458,7 +459,7 @@ function ganGiuNut(nut, lop) {
     $("dich").style.borderColor = ""; $("dich").style.borderStyle = "";
     setTimeout(() => { $("demChup").style.display = "none"; }, 1200);
     henLuuBaiHoc();
-    $("loiNhan").textContent = daDayDu() ? "Giỏi quá! Máy đã học xong, bấm 🎮 Chơi để thử nhé!" : "Đưa món rác khác vào khung và dạy tiếp nào!";
+    $("loiNhan").textContent = daDayDu() ? "Giỏi quá! Máy đã học xong, bấm Bắt đầu để thử nhé!" : "Đưa món rác khác vào khung và dạy tiếp nào!";
     if (daDayDu()) noiChu("Giỏi quá! Máy đã học xong rồi!");
   };
   nut.addEventListener("pointerdown", batDau);
