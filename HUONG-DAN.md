@@ -1,4 +1,4 @@
-# Bé Phân Loại Rác – Hướng dẫn
+# Bé phân loại rác cùng trí tuệ nhân tạo – Hướng dẫn
 
 ## AI trong ứng dụng hoạt động thế nào
 
@@ -65,15 +65,16 @@ phần dạy thêm chỉ lưu trên máy của bạn đó. Nút **↩️ Về b�
 
 - Chụp từng thùng rác thật trên mô hình (nền trắng), đặt tên như trên, để vào `anh/`.
 - Ảnh của bé: đặt tên `be.jpg` (ảnh vuông, mặt ở giữa) trong `anh/`. App hiện ảnh ở màn hình chào và góc tiêu đề.
-- Thu giọng bé 3 câu, lưu mp3 vào `am-thanh/`. Chưa có thì máy tự đọc.
+- Thu giọng bé 3 câu bằng ứng dụng Ghi âm của điện thoại, đặt tên `tai-che`, `huu-co`, `con-lai` (đuôi .m4a, .mp3 hoặc .wav đều được) và để vào `am-thanh/`. Thêm `chao` nếu muốn có lời chào. Thiếu tệp nào thì máy dùng giọng đọc tiếng Việt của điện thoại (có máy không có giọng này → im lặng, chỉ có tiếng "ting").
 - Đổi màu, tên thùng, câu nói: sửa phần CẤU HÌNH đầu thẻ `<script>` trong `index.html`.
-- Sau mỗi lần thay ảnh/âm thanh: mở `sw.js`, tăng `plr-v6` thành `plr-v7`..., rồi đưa lại lên GitHub.
+- Sau mỗi lần thay ảnh/âm thanh: mở `sw.js`, tăng `plr-v8` thành `plr-v9`..., rồi đưa lại lên GitHub.
 
-## Dành cho ba mẹ (nút ⚙️ trong tab Bé dạy máy)
+## Dành cho ba mẹ (nút ⚙️ góc trên bên phải)
 
 - **Lưu bài học ra tệp:** sao lưu những gì bé đã dạy. Nên lưu một bản trước ngày thi.
 - **Nạp bài học:** chép bài học sang điện thoại khác, không cần dạy lại.
 - **Xóa hết, dạy lại.**
+- **Thử âm thanh 3 thùng**, **Đổi camera trước/sau**; cuối bảng có dòng tình trạng: đã có mấy tệp giọng bé, máy có giọng đọc tiếng Việt không.
 
 ## Mẹo cho ngày thi
 
