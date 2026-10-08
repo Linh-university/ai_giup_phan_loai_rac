@@ -8,9 +8,9 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Bé Phân Loại Rác</title>
+<title>Bé phân loại rác cùng trí tuệ nhân tạo</title>
 <!--
-  Bé Phân Loại Rác
+  Bé phân loại rác cùng trí tuệ nhân tạo
   - Chế độ "Bé dạy máy": bé giữ nút màu của thùng rác trong lúc đưa rác trước camera -> máy học.
   - Chế độ "Chơi": máy nhận ra rác và chỉ đúng thùng.
   AI: mạng nơ-ron MobileNet trích đặc trưng ảnh + bộ phân loại KNN học ngay trên điện thoại.
@@ -26,6 +26,7 @@
   header { display:flex; justify-content:space-between; align-items:center; width:100%; max-width:520px; gap:8px; }
   h1 { margin:0; font-size:clamp(18px,5vw,28px); display:flex; align-items:center; gap:8px; }
   #anhBeNho { width:40px; height:40px; border-radius:50%; object-fit:cover; border:3px solid var(--xanh); }
+  #cham .tenSP { font-size:clamp(16px,4.5vw,20px); font-weight:700; opacity:.9; margin-top:-6px; }
   #cham .chao { display:flex; flex-direction:column; align-items:center; gap:14px; }
   #anhBeLon { width:min(48vw,220px); aspect-ratio:1; border-radius:50%; object-fit:cover; border:6px solid #fff; }
   #diem { font-size:22px; font-weight:800; white-space:nowrap; }
@@ -108,6 +109,7 @@
   <div id="cham"><div class="chao">
     <img id="anhBeLon" src="anh/be.jpg" alt="" onerror="this.remove()">
     <div id="loiChao">Xin chào!</div>
+    <div class="tenSP">Bé phân loại rác cùng trí tuệ nhân tạo</div>
     <div>👆 Chạm vào màn hình để bắt đầu</div>
   </div></div>
 
