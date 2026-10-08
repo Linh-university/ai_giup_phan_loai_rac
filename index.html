@@ -21,8 +21,6 @@
     tai-che, huu-co, con-lai : giọng bé đọc hướng dẫn cho từng thùng
     chao                     : lời chào khi mở app (không bắt buộc)
   Thiếu tệp nào thì máy dùng giọng đọc tiếng Việt của điện thoại.
-  Thư mục am-thanh/ có sẵn 4 tệp MẪU .mp3 (giọng máy). Thay bằng giọng bé: ghi đè tệp .mp3 cùng tên,
-  hoặc chỉ cần thêm tệp .m4a/.wav cùng tên — tệp ghi âm luôn được ưu tiên hơn tệp mẫu.
 -->
 <style>
   :root { --bg:#f1f9fc; --text:#0c2a3e; --xanh:#55B3D9; --line:#bfe2f0; }
@@ -176,7 +174,7 @@ const LOP_NEN = "Khong co gi";
 const TEN_BE = "Cát Uy";                 // ảnh bé đặt ở anh/be.jpg (không có thì tự ẩn)
 const AM_CHAO = "am-thanh/chao";         // lời chào khi mở app (không bắt buộc)
 const BAI_HOC_MAU = "bai-hoc-mau.json";  // bài học mẫu đi kèm app
-const DUOI_AM = ["m4a", "wav", "mp3"];   // ưu tiên tệp ghi âm (.m4a/.wav) hơn tệp mẫu .mp3
+const DUOI_AM = ["mp3", "m4a", "wav"];
 const TOI_THIEU = 30;          // số hình tối thiểu mỗi nút
 const NHIP_CHUP_MS = 150;      // giữ nút: chụp ~6 hình/giây
 const K = 10;                  // số "hàng xóm" KNN xem xét

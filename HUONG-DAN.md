@@ -65,10 +65,9 @@ phần dạy thêm chỉ lưu trên máy của bạn đó. Nút **↩️ Về b�
 
 - Chụp từng thùng rác thật trên mô hình (nền trắng), đặt tên như trên, để vào `anh/`.
 - Ảnh của bé: đặt tên `be.jpg` (ảnh vuông, mặt ở giữa) trong `anh/`. App hiện ảnh ở màn hình chào và góc tiêu đề.
-- Thư mục `am-thanh/` có sẵn 4 tệp mẫu `.mp3` giọng máy để thử. Muốn thay bằng giọng bé: ghi đè tệp `.mp3` cùng tên, hoặc upload tệp `.m4a`/`.wav` cùng tên (tệp ghi âm được ưu tiên hơn tệp mẫu).
 - Thu giọng bé 3 câu bằng ứng dụng Ghi âm của điện thoại, đặt tên `tai-che`, `huu-co`, `con-lai` (đuôi .m4a, .mp3 hoặc .wav đều được) và để vào `am-thanh/`. Thêm `chao` nếu muốn có lời chào. Thiếu tệp nào thì máy dùng giọng đọc tiếng Việt của điện thoại (có máy không có giọng này → im lặng, chỉ có tiếng "ting").
 - Đổi màu, tên thùng, câu nói: sửa phần CẤU HÌNH đầu thẻ `<script>` trong `index.html`.
-- Sau mỗi lần thay ảnh/âm thanh: mở `sw.js`, tăng `plr-v9` thành `plr-v10`..., rồi đưa lại lên GitHub.
+- Sau mỗi lần thay ảnh/âm thanh: mở `sw.js`, tăng `plr-v8` thành `plr-v9`..., rồi đưa lại lên GitHub.
 
 ## Dành cho ba mẹ (nút ⚙️ góc trên bên phải)
 

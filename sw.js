@@ -1,12 +1,11 @@
 // Lưu sẵn mọi tệp vào điện thoại sau lần mở đầu -> lần sau chạy được KHÔNG CẦN MẠNG.
 // Mỗi khi thay mô hình/ảnh/âm thanh mới: tăng số phiên bản dưới đây rồi đưa lại lên GitHub.
-const PHIEN_BAN = "plr-v9";
+const PHIEN_BAN = "plr-v8";
 const TEP = [
   "./", "./index.html", "./manifest.json", "./bai-hoc-mau.json", "./icon-192.png", "./icon-512.png",
   "./anh/be.jpg", "./anh/tai-che.jpg", "./anh/huu-co.jpg", "./anh/con-lai.jpg",
   "./am-thanh/tai-che.mp3", "./am-thanh/huu-co.mp3", "./am-thanh/con-lai.mp3", "./am-thanh/chao.mp3",
   "./am-thanh/tai-che.m4a", "./am-thanh/huu-co.m4a", "./am-thanh/con-lai.m4a", "./am-thanh/chao.m4a",
-  "./am-thanh/tai-che.wav", "./am-thanh/huu-co.wav", "./am-thanh/con-lai.wav", "./am-thanh/chao.wav",
   "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js",
   "https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js",
   "https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js"
