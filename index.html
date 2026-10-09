@@ -91,6 +91,8 @@
   #tinhTrang { max-width:520px; margin:12px auto 0; font-size:14px; line-height:1.5; color:#3d5a6e; }
   #ketQuaTep { max-width:520px; margin:10px auto 0; font-size:15px; line-height:1.5; font-weight:700; color:#1f6f91; }
   #ketQuaTep:empty { display:none; }
+  #sanSang { max-width:520px; margin:12px auto 0; padding:10px 12px; border-radius:12px; background:#f1f9fc; font-size:14px; line-height:1.5; }
+  #sanSang b.ok { color:#237a3d; } #sanSang b.chua { color:#b45309; }
 
   #phu { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
          background:rgba(255,255,255,.94); z-index:5; text-align:center; padding:20px; }
@@ -139,6 +141,7 @@
   <div id="bangBaMe" class="an" role="dialog" aria-label="Dành cho ba mẹ">
     <div class="dau"><h2>⚙️ Dành cho ba mẹ</h2><button id="dongBaMe" aria-label="Đóng">✕</button></div>
     <div class="ds">
+      <button id="caiApp" class="an">📲 Cài ứng dụng lên màn hình chính</button>
       <button id="thuAm">🔊 Thử âm thanh 3 thùng</button>
       <button id="doiCam">🔄 Đổi camera trước / sau</button>
       <button id="guiTep">📤 Gửi bài học (Zalo, Drive, Tệp...)</button>
@@ -148,6 +151,7 @@
       <button id="xoaHet">🗑️ Xóa hết, dạy lại</button>
     </div>
     <div id="ketQuaTep"></div>
+    <div id="sanSang"></div>
     <div id="tinhTrang"></div>
   </div>
 
@@ -538,7 +542,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 function moBaMe(mo) {
   $("nenBaMe").classList.toggle("an", !mo);
   $("bangBaMe").classList.toggle("an", !mo);
-  if (mo) { capNhatTinhTrang(); baoKetQua(""); }
+  if (mo) { capNhatTinhTrang(); baoKetQua(""); kiemTraKhongMang(); }
 }
 $("baMe").onclick = () => { moKhoaAmThanh(); moBaMe(true); };
 $("dongBaMe").onclick = () => moBaMe(false);
@@ -615,6 +619,43 @@ $("napTep").onchange = async e => {
   } catch (err) { alert("Tệp này không phải bài học. Hãy chọn tệp bai-hoc-mau.txt (hoặc .json)."); }
   e.target.value = "";
 };
+
+/* ---------- Cài ứng dụng & kiểm tra chạy không cần mạng ---------- */
+let loiMoiCai = null;
+const daCai = () => matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches || navigator.standalone === true;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); loiMoiCai = e; $("caiApp").classList.remove("an"); });
+window.addEventListener("appinstalled", () => { loiMoiCai = null; $("caiApp").classList.add("an"); kiemTraKhongMang(); });
+$("caiApp").onclick = async () => {
+  if (!loiMoiCai) return;
+  loiMoiCai.prompt();
+  await loiMoiCai.userChoice.catch(() => {});
+  loiMoiCai = null; $("caiApp").classList.add("an");
+};
+async function kiemTraKhongMang() {
+  const o = $("sanSang");
+  let coSW = false, coApp = false, coAI = false, coThuVien = 0;
+  try {
+    coSW = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    if ("caches" in window) {
+      for (const k of await caches.keys()) {
+        const c = await caches.open(k);
+        for (const r of await c.keys()) {
+          const u = r.url;
+          if (/index\.html$|\/$/.test(u) && u.startsWith(location.origin)) coApp = true;
+          if (/tfjs@|mobilenet@|knn-classifier@/.test(u)) coThuVien++;
+          if (/\.bin($|\?)|group1-shard|model\.json/.test(u) && !u.startsWith(location.origin)) coAI = true;
+        }
+      }
+    }
+  } catch (e) {}
+  const san = coSW && coApp && coAI && coThuVien >= 3;
+  const cai = daCai() ? "✅ đã cài (mở từ biểu tượng)" : "chưa cài — vẫn chạy được trong Chrome";
+  o.innerHTML = san
+    ? `📶 Chạy không cần mạng: <b class="ok">✅ Sẵn sàng</b><br>📲 Ứng dụng: ${cai}`
+    : `📶 Chạy không cần mạng: <b class="chua">⏳ Chưa sẵn sàng</b><br>` +
+      `Mở ứng dụng khi có mạng, chờ camera hiện hình, đóng rồi mở lại 1 lần nữa.<br>` +
+      `<span style="opacity:.75">(trang ${coApp ? "✓" : "✗"} · thư viện ${coThuVien}/3 · bộ não AI ${coAI ? "✓" : "✗"})</span><br>📲 Ứng dụng: ${cai}`;
+}
 
 /* ---------- Bắt đầu ---------- */
 $("cham").addEventListener("click", () => {
