@@ -89,6 +89,8 @@
   #bangBaMe .ds button, #bangBaMe .ds label { display:flex; align-items:center; gap:10px; min-height:48px; padding:10px 14px;
               border:2px solid var(--line); background:#f7fbfd; border-radius:14px; font-size:16px; font-weight:700; color:var(--text); text-align:left; }
   #tinhTrang { max-width:520px; margin:12px auto 0; font-size:14px; line-height:1.5; color:#3d5a6e; }
+  #ketQuaTep { max-width:520px; margin:10px auto 0; font-size:15px; line-height:1.5; font-weight:700; color:#1f6f91; }
+  #ketQuaTep:empty { display:none; }
 
   #phu { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
          background:rgba(255,255,255,.94); z-index:5; text-align:center; padding:20px; }
@@ -139,11 +141,13 @@
     <div class="ds">
       <button id="thuAm">🔊 Thử âm thanh 3 thùng</button>
       <button id="doiCam">🔄 Đổi camera trước / sau</button>
-      <button id="luuTep">💾 Lưu bài học ra tệp</button>
-      <label>📂 Nạp bài học từ tệp<input type="file" id="napTep" accept=".json,application/json" hidden></label>
+      <button id="guiTep">📤 Gửi bài học (Zalo, Drive, Tệp...)</button>
+      <button id="luuTep">💾 Tải bài học về máy</button>
+      <label>📂 Nạp bài học từ tệp<input type="file" id="napTep" accept=".txt,.json,text/plain,application/json" hidden></label>
       <button id="veGoc">↩️ Về bài học mẫu</button>
       <button id="xoaHet">🗑️ Xóa hết, dạy lại</button>
     </div>
+    <div id="ketQuaTep"></div>
     <div id="tinhTrang"></div>
   </div>
 
@@ -174,7 +178,8 @@ const NEN = { ten:"Không có rác", mau:"#7c8a80" };   // lớp nền: chỉ c�
 const LOP_NEN = "Khong co gi";
 const TEN_BE = "Cát Uy";                 // ảnh bé đặt ở anh/be.jpg (không có thì tự ẩn)
 const AM_CHAO = "am-thanh/chao";         // lời chào khi mở app (không bắt buộc)
-const BAI_HOC_MAU = "bai-hoc-mau.json";  // bài học mẫu đi kèm app
+const BAI_HOC_MAU = ["bai-hoc-mau.txt", "bai-hoc-mau.json"];  // bài học mẫu đi kèm app (tên nào cũng được)
+const TEN_TEP_BAI_HOC = "bai-hoc-mau.txt";   // .txt để mọi điện thoại cho phép gửi/lưu
 const DUOI_AM = ["m4a", "wav", "mp3"];   // ưu tiên tệp ghi âm (.m4a/.wav) hơn tệp mẫu .mp3
 const TOI_THIEU = 30;          // số hình tối thiểu mỗi nút
 const NHIP_CHUP_MS = 150;      // giữ nút: chụp ~6 hình/giây
@@ -366,13 +371,16 @@ function napBoDuLieu(obj) {
   if (Object.keys(ds).length) boPhanLoai.setClassifierDataset(ds);
 }
 async function napBaiHocMau() {
-  try {
-    const r = await fetch(BAI_HOC_MAU, { cache: "no-cache" });
-    if (!r.ok) return false;
-    napBoDuLieu(await r.json());
-    await khoGhi(xuatBoDuLieu());
-    return true;
-  } catch (e) { console.warn("Chưa có bài học mẫu", e); return false; }
+  for (const ten of BAI_HOC_MAU) {
+    try {
+      const r = await fetch(ten, { cache: "no-cache" });
+      if (!r.ok) continue;
+      napBoDuLieu(JSON.parse(await r.text()));
+      await khoGhi(xuatBoDuLieu());
+      return true;
+    } catch (e) { console.warn("Không đọc được", ten, e); }
+  }
+  return false;
 }
 function henLuuBaiHoc() {
   clearTimeout(henLuu);
@@ -530,7 +538,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 function moBaMe(mo) {
   $("nenBaMe").classList.toggle("an", !mo);
   $("bangBaMe").classList.toggle("an", !mo);
-  if (mo) capNhatTinhTrang();
+  if (mo) { capNhatTinhTrang(); baoKetQua(""); }
 }
 $("baMe").onclick = () => { moKhoaAmThanh(); moBaMe(true); };
 $("dongBaMe").onclick = () => moBaMe(false);
@@ -555,21 +563,51 @@ $("veGoc").onclick = async () => {
   capNhatSoHinh(); moBaMe(false);
   $("loiNhan").textContent = ok ? "Đã về bài học mẫu. Bạn có thể dạy thêm nhé!" : "Ứng dụng chưa có bài học mẫu.";
 };
-$("luuTep").onclick = () => {
-  if (!boPhanLoai) { alert("Đợi bộ não AI tải xong rồi lưu nhé."); return; }
+/* Xuất bài học: tệp .txt chứa JSON (điện thoại Android chỉ cho "chia sẻ" tệp .txt, không cho .json) */
+function taoTepBaiHoc() {
+  if (!boPhanLoai) { alert("Đợi bộ não AI tải xong rồi lưu nhé."); return null; }
+  const s = soHinh(), tong = Object.values(s).reduce((a, b) => a + b, 0);
+  if (!tong) { alert("Máy chưa học hình nào, chưa có gì để lưu."); return null; }
   const obj = xuatBoDuLieu(), json = {};
-  for (const l in obj) json[l] = { shape: obj[l].shape, data: Array.from(obj[l].data, x => +x.toFixed(5)) };
+  for (const l in obj) json[l] = { shape: obj[l].shape, data: Array.from(obj[l].data, x => +x.toFixed(4)) };
+  const chu = JSON.stringify(json);
+  const moTa = `${tong} hình, ${(chu.length / 1048576).toFixed(1)} MB`;
+  return { tep: new File([chu], TEN_TEP_BAI_HOC, { type: "text/plain" }), moTa };
+}
+function baoKetQua(chu) { $("ketQuaTep").textContent = chu; }
+function taiVeMay(tep, moTa) {
+  const url = URL.createObjectURL(tep);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(json)], { type: "application/json" }));
-  a.download = "bai-hoc-mau.json"; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  a.href = url; a.download = tep.name; a.rel = "noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  baoKetQua(`💾 Đã tải "${tep.name}" (${moTa}) vào thư mục Tải xuống. Không thấy tệp? Dùng nút 📤 Gửi bài học.`);
+}
+$("guiTep").onclick = async () => {
+  const kq = taoTepBaiHoc(); if (!kq) return;
+  const { tep, moTa } = kq;
+  if (navigator.canShare && navigator.canShare({ files: [tep] })) {
+    try {
+      await navigator.share({ files: [tep], title: "Bài học phân loại rác" });
+      baoKetQua(`📤 Đã gửi "${tep.name}" (${moTa}).`);
+      return;
+    } catch (e) {
+      if (e.name === "AbortError") { baoKetQua("Đã hủy gửi."); return; }
+      console.warn(e);
+    }
+  }
+  taiVeMay(tep, moTa);   // máy không hỗ trợ chia sẻ tệp -> tải về
+};
+$("luuTep").onclick = () => {
+  const kq = taoTepBaiHoc(); if (kq) taiVeMay(kq.tep, kq.moTa);
 };
 $("napTep").onchange = async e => {
   const f = e.target.files[0]; if (!f || !boPhanLoai) return;
   try {
     napBoDuLieu(JSON.parse(await f.text()));
     await khoGhi(xuatBoDuLieu()); capNhatSoHinh(); moBaMe(false);
-    $("loiNhan").textContent = "Đã nạp bài học!";
+    const tong = Object.values(soHinh()).reduce((a, b) => a + b, 0);
+    $("loiNhan").textContent = `Đã nạp bài học (${tong} hình)!`;
   } catch (err) { alert("Tệp không đúng định dạng."); }
   e.target.value = "";
 };
