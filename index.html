@@ -143,8 +143,8 @@
       <button id="doiCam">🔄 Đổi camera trước / sau</button>
       <button id="guiTep">📤 Gửi bài học (Zalo, Drive, Tệp...)</button>
       <button id="luuTep">💾 Tải bài học về máy</button>
-      <label>📂 Nạp bài học từ tệp<input type="file" id="napTep" accept=".txt,.json,text/plain,application/json" hidden></label>
-      <button id="veGoc">↩️ Về bài học mẫu</button>
+      <label>📂 Nạp bài học từ tệp (chọn "Tệp"/"Files", không chọn Thư viện ảnh)<input type="file" id="napTep" hidden></label>
+      <button id="veGoc">🌐 Lấy bài học mẫu (từ GitHub)</button>
       <button id="xoaHet">🗑️ Xóa hết, dạy lại</button>
     </div>
     <div id="ketQuaTep"></div>
@@ -556,12 +556,16 @@ $("xoaHet").onclick = async () => {
   $("loiNhan").textContent = "Đã xóa. Bé dạy lại từ đầu nhé!";
 };
 $("veGoc").onclick = async () => {
-  if (!boPhanLoai || !confirm("Bỏ phần đã dạy thêm, quay về bài học mẫu?")) return;
-  boPhanLoai.clearAllClasses();
+  if (!boPhanLoai || !confirm("Thay bài học trên máy này bằng bài học mẫu của Cát Uy?")) return;
+  baoKetQua("Đang lấy bài học mẫu...");
+  if (navigator.onLine && "caches" in window) {   // có mạng: bỏ bản cũ đã lưu để lấy bản mới nhất trên GitHub
+    try { for (const k of await caches.keys()) for (const t of BAI_HOC_MAU) await (await caches.open(k)).delete(t); } catch (e) {}
+  }
   const ok = await napBaiHocMau();
-  if (!ok) await khoGhi({});
-  capNhatSoHinh(); moBaMe(false);
-  $("loiNhan").textContent = ok ? "Đã về bài học mẫu. Bạn có thể dạy thêm nhé!" : "Ứng dụng chưa có bài học mẫu.";
+  capNhatSoHinh();
+  const tong = Object.values(soHinh()).reduce((a, b) => a + b, 0);
+  baoKetQua(ok ? `🌐 Đã lấy bài học mẫu (${tong} hình).` : "Chưa có bài học mẫu: hãy đưa tệp bai-hoc-mau.txt lên GitHub (lần đầu cần có mạng).");
+  if (ok) chuyenCheDo(daDayDu() ? "choi" : "day");
 };
 /* Xuất bài học: tệp .txt chứa JSON (điện thoại Android chỉ cho "chia sẻ" tệp .txt, không cho .json) */
 function taoTepBaiHoc() {
@@ -608,7 +612,7 @@ $("napTep").onchange = async e => {
     await khoGhi(xuatBoDuLieu()); capNhatSoHinh(); moBaMe(false);
     const tong = Object.values(soHinh()).reduce((a, b) => a + b, 0);
     $("loiNhan").textContent = `Đã nạp bài học (${tong} hình)!`;
-  } catch (err) { alert("Tệp không đúng định dạng."); }
+  } catch (err) { alert("Tệp này không phải bài học. Hãy chọn tệp bai-hoc-mau.txt (hoặc .json)."); }
   e.target.value = "";
 };
 
