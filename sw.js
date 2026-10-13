@@ -1,6 +1,6 @@
 // Lưu sẵn mọi tệp vào điện thoại sau lần mở đầu -> lần sau chạy được KHÔNG CẦN MẠNG.
 // Mỗi khi thay mô hình/ảnh/âm thanh mới: tăng số phiên bản dưới đây rồi đưa lại lên GitHub.
-const PHIEN_BAN = "plr-v19";
+const PHIEN_BAN = "plr-v20";
 const TEP = [
   "./", "./index.html", "./manifest.json", "./bai-hoc-mau.json", "./bai-hoc-mau.txt", "./icon-192.png", "./icon-512.png",
   "./anh/be.jpg", "./anh/tai-che.jpg", "./anh/huu-co.jpg", "./anh/con-lai.jpg",
@@ -16,7 +16,8 @@ const TEP = [
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(PHIEN_BAN).then(c =>
     // tệp nào chưa có (vd chưa thu âm) thì bỏ qua, không làm hỏng cả bộ
-    Promise.all(TEP.map(u => c.add(u).catch(() => {})))
+    // cache:"reload" = luôn tải bản mới từ GitHub, không lấy bản cũ trong bộ nhớ tạm của trình duyệt
+    Promise.all(TEP.map(u => c.add(new Request(u, { cache: "reload" })).catch(() => {})))
   ));
   self.skipWaiting();
 });
@@ -29,6 +30,17 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   if (e.request.url.includes("goatcounter.com")) return;   // bộ đếm truy cập: không lưu, không chặn
+  // Trang chính: có mạng thì lấy bản mới nhất (để cập nhật ngay), mất mạng thì dùng bản đã lưu
+  const url = new URL(e.request.url);
+  if (e.request.mode === "navigate" || (url.origin === location.origin && /\/(index\.html)?$/.test(url.pathname))) {
+    e.respondWith(
+      fetch(e.request, { cache: "no-store" }).then(r => {
+        if (r.ok) { const ban = r.clone(); caches.open(PHIEN_BAN).then(c => c.put(e.request, ban)); }
+        return r;
+      }).catch(() => caches.match(e.request).then(daLuu => daLuu || caches.match("./index.html")))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(daLuu => daLuu || fetch(e.request).then(r => {
       if (r.ok) { const ban = r.clone(); caches.open(PHIEN_BAN).then(c => c.put(e.request, ban)); }
