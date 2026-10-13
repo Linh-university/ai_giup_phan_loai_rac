@@ -4,8 +4,8 @@ const PHIEN_BAN = "plr-v17";
 const TEP = [
   "./", "./index.html", "./manifest.json", "./bai-hoc-mau.json", "./bai-hoc-mau.txt", "./icon-192.png", "./icon-512.png",
   "./anh/be.jpg", "./anh/tai-che.jpg", "./anh/huu-co.jpg", "./anh/con-lai.jpg",
-  "./am-thanh/tai-che.m4a", "./am-thanh/huu-co.m4a", "./am-thanh/con-lai.m4a", "./am-thanh/chao.m4a",
   "./am-thanh/tai-che.mp3", "./am-thanh/huu-co.mp3", "./am-thanh/con-lai.mp3", "./am-thanh/chao.mp3",
+  "./am-thanh/tai-che.m4a", "./am-thanh/huu-co.m4a", "./am-thanh/con-lai.m4a", "./am-thanh/chao.m4a",
   "./am-thanh/tai-che.wav", "./am-thanh/huu-co.wav", "./am-thanh/con-lai.wav", "./am-thanh/chao.wav",
   "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js",
   "https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js",
@@ -28,6 +28,7 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
+  if (e.request.url.includes("goatcounter.com")) return;   // bộ đếm truy cập: không lưu, không chặn
   e.respondWith(
     caches.match(e.request).then(daLuu => daLuu || fetch(e.request).then(r => {
       if (r.ok) { const ban = r.clone(); caches.open(PHIEN_BAN).then(c => c.put(e.request, ban)); }
