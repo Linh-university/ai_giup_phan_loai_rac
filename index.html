@@ -146,7 +146,8 @@
   <div id="bangBaMe" class="an" role="dialog" aria-label="Dành cho ba mẹ">
     <div class="dau"><h2>⚙️ Dành cho ba mẹ</h2><button id="dongBaMe" aria-label="Đóng">✕</button></div>
     <div class="ds">
-      <button id="caiApp" class="an">📲 Cài ứng dụng lên màn hình chính</button>
+      <button id="caiApp">📲 Đưa biểu tượng ra màn hình chính</button>
+      <div id="goiYCai" class="an" style="background:#e3f3fa;border-radius:12px;padding:10px 14px;font-size:15px;line-height:1.5"></div>
       <button id="thuAm">🔊 Thử âm thanh 3 thùng</button>
       <button id="doiCam">🔄 Đổi camera trước / sau</button>
       <button id="guiTep">📤 Gửi bài học (Zalo, Drive, Tệp...)</button>
@@ -641,13 +642,26 @@ $("napTep").onchange = async e => {
 /* ---------- Cài ứng dụng & kiểm tra chạy không cần mạng ---------- */
 let loiMoiCai = null;
 const daCai = () => matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches || navigator.standalone === true;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); loiMoiCai = e; $("caiApp").classList.remove("an"); });
-window.addEventListener("appinstalled", () => { loiMoiCai = null; $("caiApp").classList.add("an"); kiemTraKhongMang(); });
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); loiMoiCai = e; });
+window.addEventListener("appinstalled", () => { loiMoiCai = null; $("goiYCai").classList.add("an"); kiemTraKhongMang(); });
+if (daCai()) $("caiApp").classList.add("an");
+function huongDanCai() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua))
+    return "Trên iPhone: mở bằng <b>Safari</b> → bấm nút <b>Chia sẻ</b> (ô vuông có mũi tên) → <b>Thêm vào MH chính</b> → <b>Thêm</b>.";
+  if (/SamsungBrowser/i.test(ua))
+    return "Trên Samsung Internet: bấm <b>☰</b> (góc dưới phải) → <b>Thêm trang vào</b> → <b>Màn hình chờ</b> → <b>Thêm</b>.";
+  return "Trên Chrome: bấm <b>⋮</b> (góc trên phải) → <b>Thêm vào màn hình chính</b> → chọn <b>Tạo lối tắt</b> → <b>Thêm</b>." +
+    "<br>Nếu điện thoại báo “Ứng dụng không an toàn”, chọn cách Tạo lối tắt như trên là được.";
+}
 $("caiApp").onclick = async () => {
-  if (!loiMoiCai) return;
-  loiMoiCai.prompt();
-  await loiMoiCai.userChoice.catch(() => {});
-  loiMoiCai = null; $("caiApp").classList.add("an");
+  const goiY = $("goiYCai");
+  if (loiMoiCai) {
+    try { loiMoiCai.prompt(); const kq = await loiMoiCai.userChoice; loiMoiCai = null; if (kq && kq.outcome === "accepted") return; }
+    catch (e) { loiMoiCai = null; }
+  }
+  goiY.innerHTML = huongDanCai() + "<br>Biểu tượng tạo cách nào cũng dùng được khi không có mạng.";
+  goiY.classList.remove("an");
 };
 async function kiemTraKhongMang() {
   const o = $("sanSang");
@@ -667,7 +681,7 @@ async function kiemTraKhongMang() {
     }
   } catch (e) {}
   const san = coSW && coApp && coAI && coThuVien >= 3;
-  const cai = daCai() ? "✅ đã cài (mở từ biểu tượng)" : "chưa cài — vẫn chạy được trong Chrome";
+  const cai = daCai() ? "✅ đã cài (mở từ biểu tượng)" : "đang mở trong trình duyệt (mở từ biểu tượng ngoài màn hình chính cũng được)";
   o.innerHTML = san
     ? `📶 Chạy không cần mạng: <b class="ok">✅ Sẵn sàng</b><br>📲 Ứng dụng: ${cai}`
     : `📶 Chạy không cần mạng: <b class="chua">⏳ Chưa sẵn sàng</b><br>` +
