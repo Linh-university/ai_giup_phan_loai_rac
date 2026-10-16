@@ -77,6 +77,10 @@
   .nutDay.du::after { content:"✓"; position:absolute; top:6px; right:10px; font-size:20px; }
   #goiY { font-size:14px; opacity:.75; text-align:center; margin:8px 0 0; max-width:520px; }
   .an { display:none !important; }
+  #goiYCai { background:#e3f3fa; border-radius:12px; padding:10px 14px; font-size:15px; line-height:1.5; }
+  #goiYCai ol { margin:4px 0 8px; padding-left:22px; } #goiYCai p { margin:6px 0; }
+  #goiYCai .chuY { background:#fff4d6; border-radius:8px; padding:6px 10px; }
+  #goiYCai summary { cursor:pointer; color:#1f6f91; font-weight:600; margin-top:4px; } #goiYCai details[open] summary { margin-bottom:6px; }
 
   /* Bảng dành cho ba mẹ */
   #nenBaMe { position:fixed; inset:0; background:rgba(12,42,62,.45); z-index:8; }
@@ -147,7 +151,7 @@
     <div class="dau"><h2>⚙️ Dành cho ba mẹ</h2><button id="dongBaMe" aria-label="Đóng">✕</button></div>
     <div class="ds">
       <button id="caiApp">📲 Đưa biểu tượng ra màn hình chính</button>
-      <div id="goiYCai" class="an" style="background:#e3f3fa;border-radius:12px;padding:10px 14px;font-size:15px;line-height:1.5"></div>
+      <div id="goiYCai" class="an"></div>
       <button id="thuAm">🔊 Thử âm thanh 3 thùng</button>
       <button id="doiCam">🔄 Đổi camera trước / sau</button>
       <button id="guiTep">📤 Gửi bài học (Zalo, Drive, Tệp...)</button>
@@ -642,26 +646,29 @@ $("napTep").onchange = async e => {
 /* ---------- Cài ứng dụng & kiểm tra chạy không cần mạng ---------- */
 let loiMoiCai = null;
 const daCai = () => matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches || navigator.standalone === true;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); loiMoiCai = e; });
-window.addEventListener("appinstalled", () => { loiMoiCai = null; $("goiYCai").classList.add("an"); kiemTraKhongMang(); });
+window.addEventListener("beforeinstallprompt", e => e.preventDefault());   // không dùng hộp "Cài đặt" (Play Protect hay chặn), chỉ tạo lối tắt
 if (daCai()) $("caiApp").classList.add("an");
+const HD_CAI = {
+  chrome: `<b>📱 Android – Chrome</b><ol><li>Bấm <b>⋮</b> (3 chấm, góc trên bên phải).</li><li>Chọn <b>Thêm vào màn hình chính</b>.</li><li>Chọn <b>Tạo lối tắt</b> (không chọn “Cài đặt”).</li><li>Bấm <b>Thêm</b>.</li></ol>`,
+  samsung: `<b>📱 Android – Samsung Internet</b><ol><li>Bấm <b>☰</b> (3 gạch, góc dưới bên phải).</li><li>Chọn <b>Thêm trang vào</b> → <b>Màn hình chờ</b>.</li><li>Bấm <b>Thêm</b>.</li></ol>`,
+  ios: `<b>🍎 iPhone / iPad – Safari</b><ol><li>Bấm nút <b>Chia sẻ</b> (ô vuông có mũi tên đi lên).</li><li>Kéo xuống, chọn <b>Thêm vào MH chính</b>.</li><li>Bấm <b>Thêm</b> (góc trên bên phải).</li></ol>`
+};
 function huongDanCai() {
   const ua = navigator.userAgent;
-  if (/iPhone|iPad|iPod/i.test(ua))
-    return "Trên iPhone: mở bằng <b>Safari</b> → bấm nút <b>Chia sẻ</b> (ô vuông có mũi tên) → <b>Thêm vào MH chính</b> → <b>Thêm</b>.";
-  if (/SamsungBrowser/i.test(ua))
-    return "Trên Samsung Internet: bấm <b>☰</b> (góc dưới phải) → <b>Thêm trang vào</b> → <b>Màn hình chờ</b> → <b>Thêm</b>.";
-  return "Trên Chrome: bấm <b>⋮</b> (góc trên phải) → <b>Thêm vào màn hình chính</b> → chọn <b>Tạo lối tắt</b> → <b>Thêm</b>." +
-    "<br>Nếu điện thoại báo “Ứng dụng không an toàn”, chọn cách Tạo lối tắt như trên là được.";
+  const may = /iPhone|iPad|iPod|Macintosh.*Mobile/i.test(ua) ? "ios" : /SamsungBrowser/i.test(ua) ? "samsung" : "chrome";
+  const mxh = /Zalo|FBAN|FBAV|FB_IAB|Messenger|Instagram|TikTok|Line\//i.test(ua);
+  const khac = Object.keys(HD_CAI).filter(k => k !== may).map(k => HD_CAI[k]).join("");
+  return (mxh ? `<p class="chuY">⚠️ Đang mở trong Zalo/Facebook: bấm <b>⋯</b> → <b>Mở bằng trình duyệt</b> trước.</p>` : "") +
+    HD_CAI[may] +
+    `<p>Lần đầu mở từ biểu tượng, nhớ cho phép dùng <b>camera</b>. Sau đó dùng được cả khi <b>không có mạng</b>.</p>` +
+    `<details><summary>Hướng dẫn cho máy khác</summary>${khac}</details>`;
 }
-$("caiApp").onclick = async () => {
+$("caiApp").onclick = () => {
   const goiY = $("goiYCai");
-  if (loiMoiCai) {
-    try { loiMoiCai.prompt(); const kq = await loiMoiCai.userChoice; loiMoiCai = null; if (kq && kq.outcome === "accepted") return; }
-    catch (e) { loiMoiCai = null; }
-  }
-  goiY.innerHTML = huongDanCai() + "<br>Biểu tượng tạo cách nào cũng dùng được khi không có mạng.";
+  if (!goiY.classList.contains("an")) { goiY.classList.add("an"); return; }   // bấm lần nữa để thu gọn
+  goiY.innerHTML = huongDanCai();
   goiY.classList.remove("an");
+  goiY.scrollIntoView({ behavior: "smooth", block: "nearest" });
 };
 async function kiemTraKhongMang() {
   const o = $("sanSang");
