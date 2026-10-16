@@ -1,6 +1,6 @@
 // Lưu sẵn mọi tệp vào điện thoại sau lần mở đầu -> lần sau chạy được KHÔNG CẦN MẠNG.
 // Mỗi khi thay mô hình/ảnh/âm thanh mới: tăng số phiên bản dưới đây rồi đưa lại lên GitHub.
-const PHIEN_BAN = "plr-v23";
+const PHIEN_BAN = "plr-v24";
 const TEP = [
   "./", "./index.html", "./manifest.json", "./bai-hoc-mau.json", "./bai-hoc-mau.txt", "./icon-192.png", "./icon-512.png",
   "./anh/be.jpg", "./anh/tai-che.png", "./anh/huu-co.png", "./anh/con-lai.png",

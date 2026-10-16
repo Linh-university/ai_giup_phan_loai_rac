@@ -8,6 +8,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Bé phân loại rác cùng trí tuệ nhân tạo</title>
 <meta name="author" content="Huỳnh Ngô Cát Uy">
 <!--
@@ -33,10 +34,16 @@
          background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center;
          padding:max(8px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom)); user-select:none; -webkit-user-select:none; }
   header { display:flex; justify-content:space-between; align-items:center; width:100%; max-width:520px; gap:8px; }
-  h1 { margin:0; font-size:clamp(17px,5vw,28px); display:flex; align-items:center; gap:8px; min-width:0; }
+  h1 { margin:0; font-size:clamp(15px,4.4vw,28px); display:flex; align-items:center; gap:8px; min-width:0; }
   h1 .ten { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #anhBeNho { width:38px; height:38px; border-radius:50%; object-fit:cover; border:3px solid var(--xanh); flex:none; }
-  #diem { font-size:22px; font-weight:800; white-space:nowrap; flex:none; }
+  #diem { font-size:clamp(17px,5vw,22px); font-weight:800; white-space:nowrap; flex:none; }
+  .phai { display:flex; align-items:center; gap:8px; flex:none; }
+  #thoat { border:0; border-radius:999px; background:#fff; color:#b42318; font-size:14px; font-weight:800; padding:7px 10px;
+           box-shadow:0 1px 4px rgba(0,0,0,.12); font-family:inherit; }
+  #daThoat { position:fixed; inset:0; z-index:20; background:#0c2a3e; color:#fff; display:flex; flex-direction:column;
+             align-items:center; justify-content:center; gap:14px; text-align:center; padding:24px; font-size:20px; line-height:1.5; }
+  #daThoat b { font-size:28px; }
   #tab { display:grid; grid-template-columns:1fr 1fr auto; gap:6px; width:100%; max-width:520px; margin-top:8px;
          background:#e3f3fa; padding:4px; border-radius:999px; }
   #tab button { border:0; border-radius:999px; padding:10px 6px; font-size:clamp(14px,4vw,18px); font-weight:800; white-space:nowrap;
@@ -123,7 +130,7 @@
     Bấm nút <b>⋮</b> góc trên bên phải → <b>Open with browser</b> (Mở bằng trình duyệt).</div>
   <header>
     <h1><img id="anhBeNho" src="anh/be.jpg" alt="" onerror="this.remove()"><span class="ten">♻️ Bé Phân Loại Rác</span></h1>
-    <div id="diem">⭐ 0</div>
+    <div class="phai"><div id="diem">⭐ 0</div><button id="thoat" aria-label="Thoát">✕ Thoát</button></div>
   </header>
   <div id="tab"><button id="tabDay">🎓 Dạy máy</button><button id="tabChoi">Bắt đầu</button><button id="baMe" aria-label="Dành cho ba mẹ">⚙️ Ba mẹ</button></div>
   <div id="khung">
@@ -167,6 +174,7 @@
   </div>
 
   <div id="phu"><div class="mui">⬇️</div><img alt=""><div class="chu"></div></div>
+  <div id="daThoat" class="an"><b>👋 Tạm biệt!</b><div>Đã tắt camera và lưu bài học.<br>Vuốt lên hoặc bấm nút <b style="font-size:inherit">Màn hình chính</b> để về.</div><div style="opacity:.75;font-size:16px">Chạm vào đây để dùng tiếp</div></div>
   <div id="cham"><div class="chao">
     <img id="anhBeLon" src="anh/be.jpg" alt="" onerror="this.remove()">
     <div id="loiChao">Xin chào!</div>
@@ -705,16 +713,46 @@ function demLuot(ten) {
 }
 demLuot(daCai() ? "/mo-ung-dung-da-cai" : "/mo-ung-dung");
 
+/* ---------- Toàn màn hình, tắt camera khi rời app, nút Thoát ---------- */
+function moToanManHinh() {
+  // Ẩn thanh địa chỉ (Android Chrome/Samsung). Đã mở từ biểu tượng cài thật hoặc iPhone thì bỏ qua.
+  const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!f || document.fullscreenElement || document.webkitFullscreenElement) return;
+  if (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) return;
+  try { const p = f.call(el, { navigationUI: "hide" }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
+function tatCamera() {
+  chay = false;
+  if (luong) { luong.getTracks().forEach(tr => tr.stop()); luong = null; }
+  video.srcObject = null;
+}
+let dangAn = false;
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {        // rời app: tắt camera ngay cho nhẹ máy, đóng nhanh
+    if (chay) { dangAn = true; tatCamera(); }
+  } else if (dangAn && $("daThoat").classList.contains("an")) { dangAn = false; khoiDong(); }
+});
+$("thoat").onclick = async () => {
+  try { clearTimeout(henLuu); await khoGhi(xuatBoDuLieu()); } catch (e) {}
+  tatCamera(); dangAn = false;
+  try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+  $("bangBaMe").classList.add("an"); $("nenBaMe").classList.add("an");
+  $("daThoat").classList.remove("an");
+  window.close();          // chỉ đóng được ở một số trình duyệt; không được thì hiện màn hình "Tạm biệt"
+};
+$("daThoat").onclick = () => { $("daThoat").classList.add("an"); moToanManHinh(); khoiDong(); };
+
 /* ---------- Bắt đầu ---------- */
 $("cham").addEventListener("click", () => {
   $("cham").classList.add("an");
+  moToanManHinh();
   moKhoaAmThanh();
   if (!daCham) { daCham = true; phatAm("chao", `Xin chào! Mình là ${TEN_BE}. Cùng phân loại rác nào!`); }
   khoiDong();
 });
 document.addEventListener("pointerdown", moKhoaAmThanh, { passive: true });
-$("tabDay").onclick = () => chuyenCheDo("day");
-$("tabChoi").onclick = () => chuyenCheDo("choi");
+$("tabDay").onclick = () => { moToanManHinh(); chuyenCheDo("day"); };
+$("tabChoi").onclick = () => { moToanManHinh(); chuyenCheDo("choi"); };
 
 taiAmThanh();
 khoiDong();   // tự bật camera nếu điện thoại đã cho phép từ trước
